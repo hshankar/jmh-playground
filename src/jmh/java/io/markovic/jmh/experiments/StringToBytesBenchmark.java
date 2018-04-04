@@ -1,5 +1,7 @@
 package io.markovic.jmh.experiments;
 
+import com.google.common.base.CharMatcher;
+import com.google.common.base.Preconditions;
 import java.nio.charset.StandardCharsets;
 import java.util.concurrent.TimeUnit;
 import org.openjdk.jmh.annotations.Benchmark;
@@ -23,7 +25,25 @@ public class StringToBytesBenchmark {
   @Measurement(iterations = 10, time = 5, timeUnit = TimeUnit.SECONDS)
   @BenchmarkMode(Mode.AverageTime)
   @OutputTimeUnit(TimeUnit.NANOSECONDS)
-  public byte[] directConversionWithCheck(StringState state) {
+  public byte[] directConversionWithGuavaCheck(StringState state) {
+    String str = state.testString;
+    Preconditions.checkArgument(CharMatcher.ascii().matchesAllOf(str));
+    byte[] bytes = new byte[str.length()];
+    for (int i = 0; i < str.length(); ++i) {
+      byte b = (byte) str.charAt(i);
+      bytes[i] = b;
+    }
+    return bytes;
+  }
+
+  @Benchmark
+  @Fork(1)
+  @Threads(1)
+  @Warmup(iterations = 10, time = 5, timeUnit = TimeUnit.SECONDS)
+  @Measurement(iterations = 10, time = 5, timeUnit = TimeUnit.SECONDS)
+  @BenchmarkMode(Mode.AverageTime)
+  @OutputTimeUnit(TimeUnit.NANOSECONDS)
+  public byte[] directConversionWithIfCheck(StringState state) {
     String str = state.testString;
     byte[] bytes = new byte[str.length()];
     for (int i = 0; i < str.length(); ++i) {
@@ -43,7 +63,7 @@ public class StringToBytesBenchmark {
   @Measurement(iterations = 10, time = 5, timeUnit = TimeUnit.SECONDS)
   @BenchmarkMode(Mode.AverageTime)
   @OutputTimeUnit(TimeUnit.NANOSECONDS)
-  public byte[] directConversion(StringState state) {
+  public byte[] directConversionAscii(StringState state) {
     String str = state.testString;
     byte[] bytes = new byte[str.length()];
     for (int i = 0; i < str.length(); ++i) {
@@ -59,7 +79,7 @@ public class StringToBytesBenchmark {
   @Measurement(iterations = 10, time = 5, timeUnit = TimeUnit.SECONDS)
   @BenchmarkMode(Mode.AverageTime)
   @OutputTimeUnit(TimeUnit.NANOSECONDS)
-  public byte[] getBytes(StringState state) {
+  public byte[] getBytesAscii(StringState state) {
     String str = state.testString;
     return str.getBytes(StandardCharsets.US_ASCII);
   }
@@ -84,11 +104,12 @@ public class StringToBytesBenchmark {
 
   /*
   Results
-  Benchmark                                         Mode  Cnt    Score   Error  Units
-StringToBytesBenchmark.directConversion           avgt   10   74.786 ± 2.231  ns/op
-StringToBytesBenchmark.directConversionWithCheck  avgt   10   94.254 ± 4.749  ns/op
-StringToBytesBenchmark.getBytes                   avgt   10   94.330 ± 1.559  ns/op
-StringToBytesBenchmark.getBytesUtf8               avgt   10  140.309 ± 2.183  ns/op
+
+StringToBytesBenchmark.directConversionAscii           avgt   10   76.413 ± 6.435  ns/op
+StringToBytesBenchmark.directConversionWithGuavaCheck  avgt   10  124.436 ± 5.530  ns/op
+StringToBytesBenchmark.directConversionWithIfCheck     avgt   10   92.406 ± 1.699  ns/op
+StringToBytesBenchmark.getBytesAscii                   avgt   10   96.936 ± 2.217  ns/op
+StringToBytesBenchmark.getBytesUtf8                    avgt   10  141.218 ± 3.013  ns/op
 
    */
 }

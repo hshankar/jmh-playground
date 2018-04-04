@@ -33,6 +33,7 @@ shadowJar {
 
 dependencies {
   compile 'org.openjdk.jmh:jmh-core:1.20'
+  compile 'com.google.guava:guava:24.1-jre'
   annotationProcessor 'org.openjdk.jmh:jmh-generator-annprocess:1.20'
 }
 
